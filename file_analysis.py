@@ -8,7 +8,7 @@ class FileSystemAnalyzer:
     def __init__(self):
         self.file_sizes = []
         self.file_types = defaultdict(int)
-        self.other_types = defaultdict(int)  # Track other category file types
+        self.other_types = defaultdict(int)
         self.size_ranges = {
             '1KB': 1024,
             '10KB': 10 * 1024,
@@ -21,7 +21,6 @@ class FileSystemAnalyzer:
         }
         
     def get_file_type_category(self, extension):
-        """Categorize files based on their extensions."""
         categories = {
             'Documents': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.xls', '.xlsx', 
                          '.ppt', '.pptx', '.md', '.csv', '.json', '.xml', '.yaml', '.yml',
@@ -75,16 +74,13 @@ class FileSystemAnalyzer:
             'Other': []
         }
         
-        # Check if the file has no extension
         if not extension:
             return 'No Extension'
             
-        # Check if the extension exists in any category
         for category, extensions in categories.items():
             if extension.lower() in extensions:
                 return category
                 
-        # If we get here, the file has an extension but doesn't match any category
         return 'Other'
 
     def analyze_directory(self, directory):
@@ -100,7 +96,6 @@ class FileSystemAnalyzer:
                     file_type = self.get_file_type_category(file_extension)
                     self.file_types[file_type] += 1
                     
-                    # Track other category file types
                     if file_type == 'Other (Unknown Extension)':
                         self.other_types[file_extension.lower()] += 1
                 except (PermissionError, FileNotFoundError):
@@ -109,23 +104,20 @@ class FileSystemAnalyzer:
     def plot_histogram(self):
         """Plot histogram of file sizes."""
         plt.figure(figsize=(12, 6))
-        
-        # Filter out zero and negative sizes
+
         valid_sizes = [size for size in self.file_sizes if size > 0]
         
         if not valid_sizes:
             print("Warning: No valid file sizes found for histogram")
             plt.close()
             return
-            
-        # Create logarithmic bins
+
         min_size = min(valid_sizes)
         max_size = max(valid_sizes)
-        
-        # Ensure min_size is at least 1 to avoid log(0)
+
         min_size = max(min_size, 1)
         
-        # Create bins with a minimum of 1 byte
+
         bins = np.logspace(np.log10(min_size), np.log10(max_size), 50)
         
         plt.hist(valid_sizes, bins=bins, edgecolor='black')
@@ -134,13 +126,11 @@ class FileSystemAnalyzer:
         plt.ylabel('Number of Files')
         plt.xscale('log')
         plt.grid(True)
-        
-        # Add size range labels
+
         size_labels = ['1KB', '10KB', '100KB', '1MB', '10MB', '100MB', '1GB', '10GB']
         size_values = [1024, 10*1024, 100*1024, 1024*1024, 10*1024*1024, 
                       100*1024*1024, 1024*1024*1024, 10*1024*1024*1024]
         
-        # Only show labels that are within our data range
         valid_labels = [(label, value) for label, value in zip(size_labels, size_values) 
                        if min_size <= value <= max_size]
         if valid_labels:
@@ -155,15 +145,13 @@ class FileSystemAnalyzer:
         """Plot pie chart of file types with non-overlapping labels."""
         plt.figure(figsize=(14, 14))
 
-        # Get data
         labels = list(self.file_types.keys())
         sizes = list(self.file_types.values())
 
-        # Only show labels for categories with >1% of files
         threshold = 0.01 * sum(sizes)
         filtered_labels = [label if size > threshold else '' for label, size in zip(labels, sizes)]
 
-        # Create pie chart
+
         wedges, texts, autotexts = plt.pie(
             sizes,
             labels=filtered_labels,
@@ -174,7 +162,6 @@ class FileSystemAnalyzer:
             wedgeprops={'linewidth': 1, 'edgecolor': 'white'}
         )
 
-        # Add legend with all categories
         plt.legend(
             wedges,
             labels,
@@ -217,19 +204,18 @@ class FileSystemAnalyzer:
             percentage = (count / total_files) * 100
             print(f"{file_type}: {count} files ({percentage:.1f}%)")
         
-        # Save other category file types to a file
         if self.other_types:
             with open('other_category_analysis.txt', 'w', encoding='utf-8') as f:
                 f.write("Files with Unknown Extensions:\n")
                 f.write("-" * 30 + "\n")
-                # Sort by count in descending order
+
                 sorted_others = sorted(self.other_types.items(), key=lambda x: x[1], reverse=True)
                 for ext, count in sorted_others:
                     percentage = (count / total_files) * 100
                     f.write(f"{ext}: {count} files ({percentage:.1f}%)\n")
             print("\nUnknown extensions analysis has been saved to 'other_category_analysis.txt'")
         
-        # Generate visualizations
+
         self.plot_histogram()
         self.plot_pie_chart()
         self.plot_cdf()
@@ -238,7 +224,7 @@ class FileSystemAnalyzer:
 def main():
     analyzer = FileSystemAnalyzer()
     
-    # Get the directory to analyze
+
     directory = input("Enter the directory path to analyze: ")
     
     if not os.path.exists(directory):
