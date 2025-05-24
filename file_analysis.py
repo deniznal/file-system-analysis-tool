@@ -152,14 +152,41 @@ class FileSystemAnalyzer:
         plt.close()
 
     def plot_pie_chart(self):
-        """Plot pie chart of file types."""
-        plt.figure(figsize=(10, 10))
+        """Plot pie chart of file types with non-overlapping labels."""
+        plt.figure(figsize=(14, 14))
+
+        # Get data
         labels = list(self.file_types.keys())
         sizes = list(self.file_types.values())
-        plt.pie(sizes, labels=labels, autopct='%1.1f%%')
-        plt.title('Distribution of File Types')
-        plt.axis('equal')
-        plt.savefig('file_type_distribution.png')
+
+        # Only show labels for categories with >1% of files
+        threshold = 0.01 * sum(sizes)
+        filtered_labels = [label if size > threshold else '' for label, size in zip(labels, sizes)]
+
+        # Create pie chart
+        wedges, texts, autotexts = plt.pie(
+            sizes,
+            labels=filtered_labels,
+            autopct=lambda p: f'{p:.1f}%' if p > 1 else '',
+            startangle=140,
+            pctdistance=0.85,
+            textprops={'fontsize': 12},
+            wedgeprops={'linewidth': 1, 'edgecolor': 'white'}
+        )
+
+        # Add legend with all categories
+        plt.legend(
+            wedges,
+            labels,
+            title="File Types",
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
+            fontsize=12
+        )
+
+        plt.title('Distribution of File Types', pad=20, fontsize=16)
+        plt.tight_layout()
+        plt.savefig('file_type_distribution.png', bbox_inches='tight')
         plt.close()
 
     def plot_cdf(self):
